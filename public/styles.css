@@ -7,3 +7,4 @@
 @media(max-width:520px){.plan-tabs{grid-template-columns:repeat(2,1fr)}.mini-calendar{grid-template-columns:repeat(5,1fr)}}
 .nav>a[href="/admin"]{display:none}.product-art img{width:100%;height:100%;object-fit:cover}.cart-art img{width:100%;height:100%;object-fit:cover;border-radius:14px}
 .telegram-app .topbar{padding-top:max(9px,env(safe-area-inset-top))}.telegram-app .nav{height:68px}.telegram-app .hero{padding-top:20px}
+.address-help{color:var(--muted);font-size:10px;line-height:1.4;padding-left:2px}
