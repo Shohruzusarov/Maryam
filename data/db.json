@@ -1,0 +1,212 @@
+{
+  "products": [
+    {
+      "id": "p1",
+      "name": "Круассан классический",
+      "category": "Круассаны",
+      "price": 12000,
+      "oldPrice": 0,
+      "description": "Воздушный, сливочный, с хрустящей корочкой",
+      "image": "🥐",
+      "color": "#E9B76A",
+      "active": true,
+      "popular": true,
+      "stock": 40
+    },
+    {
+      "id": "p2",
+      "name": "Синнабон с кремом",
+      "category": "Сладкое",
+      "price": 16000,
+      "oldPrice": 18000,
+      "description": "Корица, карамель и нежный сливочный крем",
+      "image": "🍥",
+      "color": "#C98E62",
+      "active": true,
+      "popular": true,
+      "stock": 28
+    },
+    {
+      "id": "p3",
+      "name": "Самса с говядиной",
+      "category": "Сытное",
+      "price": 14000,
+      "oldPrice": 0,
+      "description": "Сочная начинка и тонкое слоёное тесто",
+      "image": "🥟",
+      "color": "#D89C4D",
+      "active": true,
+      "popular": true,
+      "stock": 35
+    },
+    {
+      "id": "p4",
+      "name": "Багет ремесленный",
+      "category": "Хлеб",
+      "price": 10000,
+      "oldPrice": 0,
+      "description": "На закваске, с пористым мякишем",
+      "image": "🥖",
+      "color": "#B7773D",
+      "active": true,
+      "popular": false,
+      "stock": 22
+    },
+    {
+      "id": "p5",
+      "name": "Улитка с изюмом",
+      "category": "Сладкое",
+      "price": 13000,
+      "oldPrice": 0,
+      "description": "Заварной крем и сочный изюм",
+      "image": "🌀",
+      "color": "#BE8656",
+      "active": true,
+      "popular": false,
+      "stock": 30
+    },
+    {
+      "id": "p6",
+      "name": "Слойка с сыром",
+      "category": "Сытное",
+      "price": 15000,
+      "oldPrice": 0,
+      "description": "Три вида сыра в хрустящем тесте",
+      "image": "🧀",
+      "color": "#DAAA55",
+      "active": true,
+      "popular": true,
+      "stock": 24
+    }
+  ],
+  "orders": [
+    {
+      "id": "MB-1046",
+      "createdAt": "2026-08-26T07:25:52.983Z",
+      "customer": "shohruz",
+      "phone": "+998909043035",
+      "address": "Дом 9, 2 podez 30",
+      "building": "Дом 9",
+      "deliveryDate": "2026-08-28",
+      "schedule": {
+        "type": "custom",
+        "dates": [
+          "2026-08-28",
+          "2026-09-01",
+          "2026-09-04",
+          "2026-09-06",
+          "2026-09-08",
+          "2026-09-11",
+          "2026-09-14"
+        ],
+        "weekdays": []
+      },
+      "slot": "07:00–08:00",
+      "items": [
+        {
+          "productId": "p1",
+          "qty": 2
+        }
+      ],
+      "perDeliveryTotal": 27000,
+      "total": 189000,
+      "status": "new",
+      "payment": "Перевод на карту · ожидает подтверждения"
+    },
+    {
+      "id": "MB-1045",
+      "createdAt": "2026-08-21T10:19:51.630Z",
+      "customer": "shohruz",
+      "phone": "+998909043035",
+      "address": "Дом 9, 2 podez 30",
+      "building": "Дом 9",
+      "deliveryDate": "2026-08-22",
+      "slot": "07:00–08:00",
+      "items": [
+        {
+          "productId": "p1",
+          "qty": 3
+        },
+        {
+          "productId": "p2",
+          "qty": 1
+        }
+      ],
+      "total": 57000,
+      "status": "paid",
+      "payment": "Тестовая оплата"
+    },
+    {
+      "id": "MB-1042",
+      "createdAt": "2026-08-20T07:12:00.000Z",
+      "customer": "Малика",
+      "phone": "+998 90 123 45 67",
+      "address": "Дом 14, подъезд 2, кв. 31",
+      "building": "Дом 14",
+      "deliveryDate": "2026-08-21",
+      "slot": "07:00–08:00",
+      "items": [
+        {
+          "productId": "p1",
+          "qty": 2
+        },
+        {
+          "productId": "p2",
+          "qty": 1
+        }
+      ],
+      "total": 40000,
+      "status": "paid",
+      "payment": "Click"
+    },
+    {
+      "id": "MB-1041",
+      "createdAt": "2026-08-20T06:50:00.000Z",
+      "customer": "Азиза",
+      "phone": "+998 93 555 21 00",
+      "address": "Дом 7, подъезд 1, кв. 12",
+      "building": "Дом 7",
+      "deliveryDate": "2026-08-21",
+      "slot": "08:00–09:00",
+      "items": [
+        {
+          "productId": "p3",
+          "qty": 3
+        },
+        {
+          "productId": "p4",
+          "qty": 1
+        }
+      ],
+      "total": 52000,
+      "status": "preparing",
+      "payment": "Payme"
+    }
+  ],
+  "settings": {
+    "bakeryName": "Maryam Bakery",
+    "phone": "+998 90 000 00 00",
+    "callCenterPhone": "+998 90 123 45 67",
+    "orderDeadline": "21:00",
+    "minOrder": 20000,
+    "deliveryFee": 3000,
+    "freeDeliveryFrom": 100000,
+    "paymentProvider": "test",
+    "cardNumber": "8600 1234 5678 9012",
+    "cardHolder": "MARYAM BAKERY",
+    "clickMerchantId": "",
+    "paymeMerchantId": "",
+    "deliverySlots": [
+      "07:00–08:00",
+      "08:00–09:00"
+    ],
+    "buildings": [
+      "Дом 7",
+      "Дом 9",
+      "Дом 12",
+      "Дом 14",
+      "Дом 18"
+    ],
+    "acceptingOrders": true
+  }
+}
