@@ -65,7 +65,13 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/api/data' && req.method === 'GET') { const db = await getDb(); if (getSession(req)) return json(res, 200, db); const { clickMerchantId, paymeMerchantId, ...settings } = db.settings; return json(res, 200, { products: db.products.filter(p => p.active), settings }); }
     if (url.pathname === '/api/auth/login' && req.method === 'POST') { const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0]; const attempt = loginAttempts.get(ip) || { count: 0, until: 0 }; if (attempt.until > Date.now()) return json(res, 429, { error: 'Слишком много попыток. Попробуйте через 15 минут.' }); const input = await body(req); const user = adminUsers.find(x => x.username === String(input.username || '').trim().toLowerCase()); if (!user || !passwordMatches(input.password || '', user)) { attempt.count++; if (attempt.count >= 5) { attempt.until = Date.now() + 15 * 60_000; attempt.count = 0; } loginAttempts.set(ip, attempt); return json(res, 401, { error: 'Неверный логин или пароль' }); } loginAttempts.delete(ip); const token = crypto.randomBytes(32).toString('hex'); sessions.set(token, { username: user.username, role: user.role, expires: Date.now() + 8 * 60 * 60_000 }); res.setHeader('Set-Cookie', sessionCookie(req, token)); return json(res, 200, { username: user.username, role: user.role }); }
     if (url.pathname === '/api/auth/logout' && req.method === 'POST') { const token = (req.headers.cookie || '').split(';').map(x => x.trim()).find(x => x.startsWith('maryam_session='))?.slice(15); if (token) sessions.delete(token); res.setHeader('Set-Cookie', sessionCookie(req, '', true)); return json(res, 200, { ok: true }); }
-    if (url.pathname === '/api/telegram/webhook' && req.method === 'POST') { if (!process.env.TELEGRAM_WEBHOOK_SECRET || req.headers['x-telegram-bot-api-secret-token'] !== process.env.TELEGRAM_WEBHOOK_SECRET) return json(res, 403, { error: 'Forbidden' }); const update = await body(req); const message = update.message; if (message?.chat?.id && (message.text === '/start' || message.text?.startsWith('/start '))) { const appUrl = process.env.APP_URL || 'https://maryam-production.up.railway.app/'; await telegramApi('sendMessage', { chat_id: message.chat.id, text: `Добро пожаловать в Maryam Bakery, ${message.from?.first_name || ''}! 🥐\n\nЗакажите свежую выпечку к утру — один раз или по подписке.`, reply_markup: { inline_keyboard: [[{ text: '🥐 Заказать выпечку', web_app: { url: appUrl } }]] } }).catch(console.error); } return json(res, 200, { ok: true }); }
+    if (url.pathname === '/api/telegram/webhook' && req.method === 'POST') {
+      if (!process.env.TELEGRAM_WEBHOOK_SECRET || req.headers['x-telegram-bot-api-secret-token'] !== process.env.TELEGRAM_WEBHOOK_SECRET) return json(res, 403, { error: 'Forbidden' });
+      const update = await body(req); const message = update.message;
+      if (message?.chat?.id && message.text === '/id') await telegramApi('sendMessage', { chat_id: message.chat.id, text: `Ваш Telegram Chat ID: ${message.chat.id}` }).catch(console.error);
+      if (message?.chat?.id && (message.text === '/start' || message.text?.startsWith('/start '))) { const appUrl = process.env.APP_URL || 'https://maryam-production.up.railway.app/'; await telegramApi('sendMessage', { chat_id: message.chat.id, text: `Добро пожаловать в Maryam Bakery, ${message.from?.first_name || ''}! 🥐\n\nЗакажите свежую выпечку к утру — один раз или по подписке.`, reply_markup: { inline_keyboard: [[{ text: '🥐 Заказать выпечку', web_app: { url: appUrl } }]] } }).catch(console.error); }
+      return json(res, 200, { ok: true });
+    }
     if (url.pathname === '/api/orders' && req.method === 'POST') {
       const input = await body(req); const db = await getDb();
       const telegramUser = validateTelegramInitData(input.telegramInitData);
@@ -103,4 +109,10 @@ const server = http.createServer(async (req, res) => {
     try { const content = await readFile(file); res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream' }); res.end(content); } catch { json(res, 404, { error: 'Not found' }); }
   } catch (e) { console.error(e); json(res, 500, { error: 'Ошибка сервера' }); }
 });
-server.listen(port, () => console.log(`Maryam Bakery: http://localhost:${port}`));
+server.listen(port, async () => {
+  console.log(`Maryam Bakery: http://localhost:${port}`);
+  if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_WEBHOOK_SECRET && process.env.APP_URL) {
+    const webhook = `${process.env.APP_URL.replace(/\/$/, '')}/api/telegram/webhook`;
+    try { const result = await telegramApi('setWebhook', { url: webhook, secret_token: process.env.TELEGRAM_WEBHOOK_SECRET, allowed_updates: ['message'], drop_pending_updates: false }); console.log(result?.ok ? `Telegram webhook connected: ${webhook}` : 'Telegram webhook error', result); } catch (error) { console.error('Telegram webhook setup failed:', error.message); }
+  }
+});
