@@ -113,6 +113,6 @@ server.listen(port, async () => {
   console.log(`Maryam Bakery: http://localhost:${port}`);
   if (process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_WEBHOOK_SECRET && process.env.APP_URL) {
     const webhook = `${process.env.APP_URL.replace(/\/$/, '')}/api/telegram/webhook`;
-    try { const result = await telegramApi('setWebhook', { url: webhook, secret_token: process.env.TELEGRAM_WEBHOOK_SECRET, allowed_updates: ['message'], drop_pending_updates: false }); console.log(result?.ok ? `Telegram webhook connected: ${webhook}` : 'Telegram webhook error', result); } catch (error) { console.error('Telegram webhook setup failed:', error.message); }
+    try { const result = await telegramApi('setWebhook', { url: webhook, secret_token: process.env.TELEGRAM_WEBHOOK_SECRET, allowed_updates: ['message'], drop_pending_updates: false }); await telegramApi('setChatMenuButton', { menu_button: { type: 'web_app', text: 'Заказать выпечку', web_app: { url: process.env.APP_URL } } }); console.log(result?.ok ? `Telegram webhook connected: ${webhook}` : 'Telegram webhook error', result); } catch (error) { console.error('Telegram webhook setup failed:', error.message); }
   }
 });
