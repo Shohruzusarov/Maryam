@@ -185,6 +185,8 @@
   ],
   "settings": {
     "bakeryName": "Maryam Bakery",
+    "logoUrl": "",
+    "heroImageUrl": "",
     "phone": "+998 90 000 00 00",
     "callCenterPhone": "+998 90 123 45 67",
     "orderDeadline": "21:00",

@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 const root = path.dirname(fileURLToPath(import.meta.url));
 const publicDir = path.join(root, 'public');
 const dataDir = process.env.RAILWAY_VOLUME_MOUNT_PATH || path.join(root, 'data');
+const uploadsDir = path.join(dataDir, 'uploads');
 const dbFile = path.join(dataDir, 'db.json');
 const port = Number(process.env.PORT || 3000);
 const adminUsers = [
@@ -32,7 +33,7 @@ const seed = {
     { id: 'MB-1041', createdAt: '2026-08-20T06:50:00.000Z', customer: 'Азиза', phone: '+998 93 555 21 00', address: 'Дом 7, подъезд 1, кв. 12', building: 'Дом 7', deliveryDate: '2026-08-21', slot: '08:00–09:00', items: [{ productId: 'p3', qty: 3 }, { productId: 'p4', qty: 1 }], total: 52000, status: 'preparing', payment: 'Payme' }
   ],
   settings: {
-    bakeryName: 'Maryam Bakery', phone: '+998 90 000 00 00', callCenterPhone: '+998 90 123 45 67', orderDeadline: '21:00', minOrder: 30000,
+    bakeryName: 'Maryam Bakery', logoUrl: '', heroImageUrl: '', phone: '+998 90 000 00 00', callCenterPhone: '+998 90 123 45 67', orderDeadline: '21:00', minOrder: 30000,
     deliveryFee: 5000, freeDeliveryFrom: 100000, paymentProvider: 'test', cardNumber: '8600 1234 5678 9012', cardHolder: 'MARYAM BAKERY', clickMerchantId: '', paymeMerchantId: '',
     deliverySlots: ['07:00–08:00', '08:00–09:00'], buildings: ['Дом 7', 'Дом 9', 'Дом 12', 'Дом 14', 'Дом 18'], acceptingOrders: true
   }
@@ -40,6 +41,7 @@ const seed = {
 
 async function ensureDb() {
   await mkdir(dataDir, { recursive: true });
+  await mkdir(uploadsDir, { recursive: true });
   if (!existsSync(dbFile)) await writeFile(dbFile, JSON.stringify(seed, null, 2));
 }
 async function getDb() { return JSON.parse(await readFile(dbFile, 'utf8')); }
@@ -52,7 +54,7 @@ function sessionCookie(req, token, clear = false) { const secure = req.headers['
 function validateTelegramInitData(raw) { if (!raw || !process.env.TELEGRAM_BOT_TOKEN) return null; try { const params = new URLSearchParams(raw), received = params.get('hash'); params.delete('hash'); params.delete('signature'); const check = [...params.entries()].sort(([a],[b]) => a.localeCompare(b)).map(([k,v]) => `${k}=${v}`).join('\n'); const secret = crypto.createHmac('sha256', 'WebAppData').update(process.env.TELEGRAM_BOT_TOKEN).digest(); const expected = crypto.createHmac('sha256', secret).update(check).digest('hex'); const fresh = Date.now() / 1000 - Number(params.get('auth_date')) < 86400; if (!received || !fresh || received.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(received), Buffer.from(expected))) return null; return JSON.parse(params.get('user') || 'null'); } catch { return null; } }
 async function telegramApi(method, payload) { if (!process.env.TELEGRAM_BOT_TOKEN) return null; const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/${method}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); return response.json(); }
 function safeProduct(input, id) {
-  const imageUrl = /^https?:\/\//i.test(String(input.imageUrl || '').trim()) ? String(input.imageUrl).trim() : '';
+  const imageUrl = /^(https?:\/\/|\/uploads\/)/i.test(String(input.imageUrl || '').trim()) ? String(input.imageUrl).trim() : '';
   return { id, name: String(input.name || '').trim(), category: String(input.category || 'Другое'), price: Number(input.price || 0), oldPrice: Number(input.oldPrice || 0), description: String(input.description || ''), image: String(input.image || '🥐'), imageUrl, color: String(input.color || '#C9905B'), active: input.active !== false, popular: Boolean(input.popular), stock: Number(input.stock || 0) };
 }
 
@@ -94,6 +96,7 @@ const server = http.createServer(async (req, res) => {
     if (url.pathname === '/admin' || url.pathname === '/admin.html') { if (!session) { res.writeHead(302, { Location: '/login' }); return res.end(); } }
     if (url.pathname.startsWith('/api/') && !session) return json(res, 401, { error: 'Требуется вход в админку' });
     if (url.pathname === '/api/auth/me' && req.method === 'GET') return json(res, 200, session);
+    if (url.pathname === '/api/uploads' && req.method === 'POST') { const input = await body(req); const types = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' }; const ext = types[input.type]; if (!ext || typeof input.data !== 'string') return json(res, 400, { error: 'Разрешены только JPG, PNG и WEBP' }); const encoded = input.data.replace(/^data:[^;]+;base64,/, ''); const file = Buffer.from(encoded, 'base64'); if (!file.length || file.length > 5 * 1024 * 1024) return json(res, 400, { error: 'Размер изображения должен быть не больше 5 МБ' }); const filename = `${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`; await writeFile(path.join(uploadsDir, filename), file); return json(res, 201, { url: `/uploads/${filename}` }); }
     if (url.pathname === '/api/products' && req.method === 'POST') { const db = await getDb(); const input = await body(req); const product = safeProduct(input, `p${Date.now()}`); db.products.push(product); await saveDb(db); return json(res, 201, product); }
     const productMatch = url.pathname.match(/^\/api\/products\/([^/]+)$/);
     if (productMatch && req.method === 'PUT') { const db = await getDb(); const i = db.products.findIndex(p => p.id === productMatch[1]); if (i < 0) return json(res, 404, { error: 'Товар не найден' }); db.products[i] = safeProduct(await body(req), db.products[i].id); await saveDb(db); return json(res, 200, db.products[i]); }
@@ -102,6 +105,7 @@ const server = http.createServer(async (req, res) => {
     if (orderMatch && req.method === 'PATCH') { const db = await getDb(); const o = db.orders.find(x => x.id === orderMatch[1]); if (!o) return json(res, 404, { error: 'Заказ не найден' }); Object.assign(o, await body(req)); await saveDb(db); return json(res, 200, o); }
     if (url.pathname === '/api/settings' && req.method === 'PUT') { const db = await getDb(); db.settings = { ...db.settings, ...(await body(req)) }; await saveDb(db); return json(res, 200, db.settings); }
 
+    if (url.pathname.startsWith('/uploads/')) { const filename = path.basename(url.pathname); const file = path.join(uploadsDir, filename); const ext = path.extname(file); const types = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.webp': 'image/webp' }; try { const content = await readFile(file); res.writeHead(200, { 'Content-Type': types[ext] || 'application/octet-stream', 'Cache-Control': 'public, max-age=31536000, immutable' }); return res.end(content); } catch { return json(res, 404, { error: 'Image not found' }); } }
     const rel = url.pathname === '/' ? 'index.html' : url.pathname === '/admin' ? 'admin.html' : url.pathname === '/login' ? 'login.html' : url.pathname.slice(1);
     const file = path.normalize(path.join(publicDir, rel));
     if (!file.startsWith(publicDir)) return json(res, 403, { error: 'Forbidden' });
