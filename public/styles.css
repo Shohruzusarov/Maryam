@@ -9,4 +9,5 @@
 .telegram-app .topbar{padding-top:max(9px,env(safe-area-inset-top))}.telegram-app .nav{height:68px}.telegram-app .hero{padding-top:20px}
 .address-help{color:var(--muted);font-size:10px;line-height:1.4;padding-left:2px}
 .hero-visual.has-photo:before{display:none}.hero-photo{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.hero-visual.has-photo:after{content:'';position:absolute;inset:0;background:linear-gradient(to top,#3e2a2044,transparent 50%)}.hero-visual.has-photo .wheat{display:none}.hero-visual.has-photo .floating-card{z-index:2}
-.logo-mark.has-logo{overflow:hidden;background:#fff;border-radius:50%;padding:2px}.logo-mark.has-logo img{width:100%;height:100%;object-fit:contain;border-radius:50%}
+.logo.has-full-logo{display:flex;align-items:center}.logo.has-full-logo img{display:block;width:auto;height:66px;max-width:230px;object-fit:contain}.footer .logo.has-full-logo img{height:58px;filter:drop-shadow(0 2px 8px #0002)}.hero-visual.has-photo .float-one{left:22px;bottom:22px}.hero-visual.has-photo .float-two{right:22px;top:56px}
+@media(max-width:520px){.logo.has-full-logo img{height:50px;max-width:180px}.hero-visual.has-photo .float-one{left:12px;bottom:12px}.hero-visual.has-photo .float-two{right:12px;top:34px}}
